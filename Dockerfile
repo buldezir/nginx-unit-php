@@ -1,4 +1,4 @@
-FROM php:8.1-cli as BUILDER
+FROM php:8.2-cli as BUILDER
 
 LABEL maintainer="Alexander Arutyunov <buldezir@gmail.com>"
 
@@ -6,7 +6,7 @@ RUN set -ex \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates git build-essential libssl-dev libpcre2-dev wget \
     && mkdir -p /usr/lib/unit/modules /usr/lib/unit/debug-modules \
-    && git clone https://github.com/buldezir/unit.git \
+    && git clone https://github.com/nginx/unit.git \
     && cd unit \
     && NCPU="$(getconf _NPROCESSORS_ONLN)" \
     && DEB_HOST_MULTIARCH="$(dpkg-architecture -q DEB_HOST_MULTIARCH)" \
@@ -39,7 +39,7 @@ RUN set -ex \
     && make -j $NCPU php-install \
     && ldd /usr/sbin/unitd | awk '/=>/{print $(NF-1)}' | while read n; do dpkg-query -S $n; done | sed 's/^\([^:]\+\):.*$/\1/' | sort | uniq > /requirements.apt
 
-FROM php:8.1-cli
+FROM php:8.2-cli
 COPY docker-entrypoint.sh /usr/local/bin/
 COPY --from=BUILDER /usr/sbin/unitd /usr/sbin/unitd
 COPY --from=BUILDER /usr/sbin/unitd-debug /usr/sbin/unitd-debug
